@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Candy Crush Game</title>
   <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
   <style>
@@ -100,12 +100,13 @@
     let currentLevel = 1;
     let candies = [];
     let score = 0;
+
     const candyImages = [
-      'https://i.imgur.com/LI4H71Q.png',
-      'https://i.imgur.com/fno43I4.png',
-      'https://i.imgur.com/I1QgtrE.png',
-      'https://i.imgur.com/q2YjKXZ.png',
-      'https://i.imgur.com/Y0zF4eB.png'
+      'https://raw.githubusercontent.com/nareshbhatia/html5-candy/master/images/candy1.png',
+      'https://raw.githubusercontent.com/nareshbhatia/html5-candy/master/images/candy2.png',
+      'https://raw.githubusercontent.com/nareshbhatia/html5-candy/master/images/candy3.png',
+      'https://raw.githubusercontent.com/nareshbhatia/html5-candy/master/images/candy4.png',
+      'https://raw.githubusercontent.com/nareshbhatia/html5-candy/master/images/candy5.png'
     ];
 
     function createBoard() {
@@ -154,7 +155,7 @@
     function enableDrag() {
       let draggedCandy = null;
       candies.forEach(candy => {
-        candy.addEventListener('dragstart', (e) => {
+        candy.addEventListener('dragstart', () => {
           draggedCandy = candy;
         });
 
@@ -162,7 +163,7 @@
           e.preventDefault();
         });
 
-        candy.addEventListener('drop', (e) => {
+        candy.addEventListener('drop', () => {
           const targetCandy = candy;
           swapCandies(draggedCandy, targetCandy);
           setTimeout(() => {
