@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Candy Crush Game</title>
+  <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Luckiest Guy', cursive;
+      background: linear-gradient(to top right, #ffb3ec, #ffd6e0);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      font-size: 3em;
+      color: #ff0080;
+      text-shadow: 2px 2px white;
+    }
+    #game-container {
+      margin-top: 30px;
+      text-align: center;
+    }
+    #level-info {
+      font-size: 1.2em;
+      color: #6a0572;
+      margin-bottom: 10px;
+    }
+    #game-board {
+      display: grid;
+      grid-template-columns: repeat(8, 60px);
+      grid-template-rows: repeat(8, 60px);
+      gap: 2px;
+      margin: 20px auto;
+    }
+    .candy {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      background-size: cover;
+      cursor: pointer;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    .cleared {
+      opacity: 0;
+      transform: scale(0.5);
+    }
+    #controls button {
+      margin: 5px;
+      padding: 10px 20px;
+      font-size: 1em;
+      border: none;
+      border-radius: 10px;
+      background-color: #ff66cc;
+      color: white;
+      cursor: pointer;
+      box-shadow: 2px 2px #ff3399;
+    }
+    #offer-popup {
+      background: white;
+      padding: 20px;
+      border: 2px solid #ff66cc;
+      border-radius: 10px;
+      display: inline-block;
+      margin-top: 10px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <h1>Candy Crush</h1>
+    <div id="level-info">
+      Level: <span id="level-number">1</span> / 500 | Stars: <span id="stars">★☆☆</span>
+    </div>
+    <div id="game-board"></div>
+    <div id="controls">
+      <button onclick="startNewLevel()">Next Level</button>
+      <button onclick="showOffer()">Get Offer</button>
+    </div>
+    <div id="offer-popup" class="hidden">
+      🎁 Special Offer: +5 Moves & Candy Bomb!<br />
+      <button onclick="claimOffer()">Claim</button>
+    </div>
+    <audio id="match-sound" src="https://freesound.org/data/previews/341/341695_3248244-lq.mp3"></audio>
+  </div>
+
+  <script>
+    const board = document.getElementById('game-board');
+    const levelNumber = document.getElementById('level-number');
+    const starsDisplay = document.getElementById('stars');
+    const offerPopup = document.getElementById('offer-popup');
+    const matchSound = document.getElementById('match-sound');
+    const width = 8;
+    let currentLevel = 1;
+    let candies = [];
+    let score = 0;
+    const candyImages = [
+      'https://i.imgur.com/LI4H71Q.png',
+      'https://i.imgur.com/fno43I4.png',
+      'https://i.imgur.com/I1QgtrE.png',
+      'https://i.imgur.com/q2YjKXZ.png',
+      'https://i.imgur.com/Y0zF4eB.png'
+    ];
+
+    function createBoard() {
+      candies = [];
+      board.innerHTML = '';
+      for (let i = 0; i < width * width; i++) {
+        const candy = document.createElement('div');
+        let candyType = Math.floor(Math.random() * candyImages.length);
+        candy.className = 'candy';
+        candy.setAttribute('draggable', true);
+        candy.setAttribute('data-id', i);
+        candy.setAttribute('data-type', candyType);
+        candy.style.backgroundImage = `url('${candyImages[candyType]}')`;
+        board.appendChild(candy);
+        candies.push(candy);
+      }
+      enableDrag();
+    }
+
+    function startNewLevel() {
+      if (currentLevel >= 500) {
+        alert("🎉 Congratulations! You've completed all 500 levels!");
+        return;
+      }
+      currentLevel++;
+      levelNumber.textContent = currentLevel;
+      starsDisplay.textContent = getStars(currentLevel);
+      createBoard();
+    }
+
+    function getStars(level) {
+      if (level % 3 === 0) return '★★★';
+      if (level % 2 === 0) return '★★☆';
+      return '★☆☆';
+    }
+
+    function showOffer() {
+      offerPopup.classList.remove('hidden');
+    }
+
+    function claimOffer() {
+      alert('🎉 Offer Claimed: Extra moves and power-up!');
+      offerPopup.classList.add('hidden');
+    }
+
+    function enableDrag() {
+      let draggedCandy = null;
+      candies.forEach(candy => {
+        candy.addEventListener('dragstart', (e) => {
+          draggedCandy = candy;
+        });
+
+        candy.addEventListener('dragover', (e) => {
+          e.preventDefault();
+        });
+
+        candy.addEventListener('drop', (e) => {
+          const targetCandy = candy;
+          swapCandies(draggedCandy, targetCandy);
+          setTimeout(() => {
+            checkMatches();
+          }, 100);
+        });
+      });
+    }
+
+    function swapCandies(c1, c2) {
+      let type1 = c1.getAttribute('data-type');
+      let type2 = c2.getAttribute('data-type');
+      c1.setAttribute('data-type', type2);
+      c1.style.backgroundImage = `url('${candyImages[type2]}')`;
+      c2.setAttribute('data-type', type1);
+      c2.style.backgroundImage = `url('${candyImages[type1]}')`;
+    }
+
+    function checkMatches() {
+      for (let i = 0; i < width * width; i++) {
+        let row = Math.floor(i / width);
+        let col = i % width;
+
+        if (col < width - 2) {
+          let t1 = candies[i].getAttribute('data-type');
+          let t2 = candies[i + 1].getAttribute('data-type');
+          let t3 = candies[i + 2].getAttribute('data-type');
+          if (t1 === t2 && t2 === t3 && t1 !== '-1') {
+            [i, i + 1, i + 2].forEach(idx => clearCandy(idx));
+          }
+        }
+
+        if (row < width - 2) {
+          let t1 = candies[i].getAttribute('data-type');
+          let t2 = candies[i + width]?.getAttribute('data-type');
+          let t3 = candies[i + width * 2]?.getAttribute('data-type');
+          if (t1 === t2 && t2 === t3 && t1 !== '-1') {
+            [i, i + width, i + width * 2].forEach(idx => clearCandy(idx));
+          }
+        }
+      }
+    }
+
+    function clearCandy(index) {
+      const candy = candies[index];
+      candy.classList.add('cleared');
+      candy.setAttribute('data-type', '-1');
+      candy.style.backgroundImage = '';
+      matchSound.currentTime = 0;
+      matchSound.play();
+    }
+
+    createBoard();
+  </script>
+</body>
+</html>
